@@ -25,6 +25,9 @@ New eval suites must include clear pass/fail criteria and a baseline. Dataset up
 - `skills_structure` - checks skills folders contain SKILL.md
 - `prompt_schema` - validates prompts against prompt.schema.json
 
+## Asset Promotion Pipeline
+See `ASSET_PROMOTION.md` for the checklist and approval flow.
+
 ## Dataset & Baselines
 - Datasets live under `datasets/` (TBD structure).
 - Baselines live under `baselines/` and are keyed by tag.
