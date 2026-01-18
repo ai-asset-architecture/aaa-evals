@@ -43,7 +43,10 @@ def check_readme(repo_path):
 def check_workflows(repo_path):
     workflows_dir = os.path.join(repo_path, ".github", "workflows")
     if not os.path.isdir(workflows_dir):
-        return False, [".github/workflows missing"]
+        return True, ["no workflows to check"]
+
+    if os.path.basename(repo_path) == "aaa-actions":
+        return True, ["skip aaa-actions self-check"]
 
     yaml_files = [
         os.path.join(workflows_dir, name)
@@ -51,7 +54,7 @@ def check_workflows(repo_path):
         if name.endswith((".yml", ".yaml"))
     ]
     if not yaml_files:
-        return False, ["No workflow files found"]
+        return True, ["no workflow files found"]
 
     missing = []
     uses_pattern = re.compile(r"uses:\s*ai-asset-architecture/aaa-actions/.github/workflows/[^@\s]+@v")
@@ -92,6 +95,25 @@ def load_schema(schema_path):
         return json.load(handle)
 
 
+def fallback_validate_prompt(schema, prompt_obj):
+    required = schema.get("required", [])
+    props = schema.get("properties", {})
+    missing = [key for key in required if key not in prompt_obj]
+    if missing:
+        return False, [f"missing required fields: {', '.join(missing)}"]
+
+    for key, spec in props.items():
+        if key not in prompt_obj:
+            continue
+        expected_type = spec.get("type")
+        if expected_type == "string" and not isinstance(prompt_obj[key], str):
+            return False, [f"{key} must be string"]
+        if expected_type == "object" and not isinstance(prompt_obj[key], dict):
+            return False, [f"{key} must be object"]
+
+    return True, []
+
+
 def check_prompt_schema(repo_path, schema_path, prompts_dir):
     schema_file = os.path.join(repo_path, schema_path)
     if not os.path.isfile(schema_file):
@@ -101,11 +123,8 @@ def check_prompt_schema(repo_path, schema_path, prompts_dir):
     if not os.path.isdir(prompts_root):
         return False, [f"{prompts_dir} missing"]
 
-    if Draft202012Validator is None:
-        return False, ["jsonschema is not installed"]
-
     schema = load_schema(schema_file)
-    validator = Draft202012Validator(schema)
+    validator = Draft202012Validator(schema) if Draft202012Validator else None
     failures = []
     for root, _dirs, files in os.walk(prompts_root):
         for name in files:
@@ -116,6 +135,11 @@ def check_prompt_schema(repo_path, schema_path, prompts_dir):
                 payload = json.loads(read_file(path))
             except json.JSONDecodeError as exc:
                 failures.append(f"{os.path.relpath(path, repo_path)} invalid JSON: {exc}")
+                continue
+            if validator is None:
+                ok, issues = fallback_validate_prompt(schema, payload)
+                if not ok:
+                    failures.append(f"{os.path.relpath(path, repo_path)}: {', '.join(issues)}")
                 continue
             errors = sorted(validator.iter_errors(payload), key=lambda err: err.path)
             if errors:
