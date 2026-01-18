@@ -1,0 +1,1 @@
+{"id":"prompt-schema","description":"Prompts validate against prompt.schema.json","target_repo":"<repo-path>","schema_path":"prompt.schema.json","prompts_dir":"prompts"}

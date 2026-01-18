@@ -1,0 +1,5 @@
+name: prompt_schema
+cases: evals/cases/prompt_schema.jsonl
+baseline: evals/baselines/prompt_schema.baseline.json
+runner: runner/run_repo_checks.py
+check: prompt

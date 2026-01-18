@@ -82,19 +82,75 @@ def check_skills(repo_path, skills_root):
     return len(missing) == 0, missing
 
 
+def load_schema(schema_path):
+    with open(schema_path, "r", encoding="utf-8") as handle:
+        return json.load(handle)
+
+
+def validate_prompt(schema, prompt_obj):
+    required = schema.get("required", [])
+    props = schema.get("properties", {})
+    missing = [key for key in required if key not in prompt_obj]
+    if missing:
+        return False, [f"missing required fields: {', '.join(missing)}"]
+
+    for key, spec in props.items():
+        if key not in prompt_obj:
+            continue
+        expected_type = spec.get("type")
+        if expected_type == "string" and not isinstance(prompt_obj[key], str):
+            return False, [f"{key} must be string"]
+        if expected_type == "object" and not isinstance(prompt_obj[key], dict):
+            return False, [f"{key} must be object"]
+
+    return True, []
+
+
+def check_prompt_schema(repo_path, schema_path, prompts_dir):
+    schema_file = os.path.join(repo_path, schema_path)
+    if not os.path.isfile(schema_file):
+        return False, [f"{schema_path} missing"]
+
+    prompts_root = os.path.join(repo_path, prompts_dir)
+    if not os.path.isdir(prompts_root):
+        return False, [f"{prompts_dir} missing"]
+
+    schema = load_schema(schema_file)
+    failures = []
+    for root, _dirs, files in os.walk(prompts_root):
+        for name in files:
+            if not name.endswith(".json"):
+                continue
+            path = os.path.join(root, name)
+            try:
+                payload = json.loads(read_file(path))
+            except json.JSONDecodeError as exc:
+                failures.append(f"{os.path.relpath(path, repo_path)} invalid JSON: {exc}")
+                continue
+            ok, issues = validate_prompt(schema, payload)
+            if not ok:
+                failures.append(f"{os.path.relpath(path, repo_path)}: {', '.join(issues)}")
+
+    return len(failures) == 0, failures
+
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--check", required=True, choices=["readme", "workflow", "skills"])
+    parser.add_argument("--check", required=True, choices=["readme", "workflow", "skills", "prompt"])
     parser.add_argument("--repo", required=True, help="Target repo path")
     parser.add_argument("--skills-root", default="skills")
+    parser.add_argument("--schema-path", default="prompt.schema.json")
+    parser.add_argument("--prompts-dir", default="prompts")
     args = parser.parse_args()
 
     if args.check == "readme":
         passed, details = check_readme(args.repo)
     elif args.check == "workflow":
         passed, details = check_workflows(args.repo)
-    else:
+    elif args.check == "skills":
         passed, details = check_skills(args.repo, args.skills_root)
+    else:
+        passed, details = check_prompt_schema(args.repo, args.schema_path, args.prompts_dir)
 
     output = {
         "check": args.check,
