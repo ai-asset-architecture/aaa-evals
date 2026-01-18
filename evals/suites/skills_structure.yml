@@ -1,0 +1,5 @@
+name: skills_structure
+cases: evals/cases/skills_structure.jsonl
+baseline: evals/baselines/skills_structure.baseline.json
+runner: runner/run_repo_checks.py
+check: skills

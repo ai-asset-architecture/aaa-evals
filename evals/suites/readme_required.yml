@@ -1,0 +1,5 @@
+name: readme_required
+cases: evals/cases/readme_required.jsonl
+baseline: evals/baselines/readme_required.baseline.json
+runner: runner/run_repo_checks.py
+check: readme

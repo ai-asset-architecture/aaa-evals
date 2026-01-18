@@ -1,0 +1,5 @@
+name: workflow_tag_refs
+cases: evals/cases/workflow_tag_refs.jsonl
+baseline: evals/baselines/workflow_tag_refs.baseline.json
+runner: runner/run_repo_checks.py
+check: workflow

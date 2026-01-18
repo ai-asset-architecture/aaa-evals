@@ -19,6 +19,11 @@ New eval suites must include clear pass/fail criteria and a baseline. Dataset up
 - `core` (TBD)
 - `agents` (TBD)
 
+## Example Suites (v0.1)
+- `readme_required` - checks README required sections and CODEOWNERS
+- `workflow_tag_refs` - checks workflows reference aaa-actions by tag
+- `skills_structure` - checks skills folders contain SKILL.md
+
 ## Dataset & Baselines
 - Datasets live under `datasets/` (TBD structure).
 - Baselines live under `baselines/` and are keyed by tag.
@@ -26,4 +31,11 @@ New eval suites must include clear pass/fail criteria and a baseline. Dataset up
 ## How to Run
 ```bash
 aaa eval run --suite core --source ./aaa-evals
+```
+
+Example runner usage:
+```bash
+python runner/run_repo_checks.py --check readme --repo /path/to/repo
+python runner/run_repo_checks.py --check workflow --repo /path/to/repo
+python runner/run_repo_checks.py --check skills --repo /path/to/aaa-tools --skills-root skills
 ```
