@@ -1,0 +1,29 @@
+# aaa-evals
+
+## Purpose / Scope
+Evaluation assets: suites, datasets, and baselines used to gate releases and verify quality across aaa projects.
+
+## Ownership / CODEOWNERS
+Owned by the evals/QA maintainers. See `CODEOWNERS` (to be added).
+
+## Versioning / Release
+Eval suites and datasets are versioned by git tags. Baselines should be stored with the tag they were generated from.
+
+## How to Consume / Use
+Run evals via `aaa-tools` and pin to a specific tag for reproducibility.
+
+## Contribution / Promotion Rules
+New eval suites must include clear pass/fail criteria and a baseline. Dataset updates require a new tag.
+
+## Eval Suites
+- `core` (TBD)
+- `agents` (TBD)
+
+## Dataset & Baselines
+- Datasets live under `datasets/` (TBD structure).
+- Baselines live under `baselines/` and are keyed by tag.
+
+## How to Run
+```bash
+aaa eval run --suite core --source ./aaa-evals
+```

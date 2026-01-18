@@ -1,0 +1,3 @@
+name: smoke
+cases: evals/cases/smoke_cases.jsonl
+baseline: evals/baselines/smoke.baseline.json
