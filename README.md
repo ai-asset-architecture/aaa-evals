@@ -28,6 +28,17 @@ New eval suites must include clear pass/fail criteria and a baseline. Dataset up
 ## Asset Promotion Pipeline
 See `ASSET_PROMOTION.md` for the checklist and approval flow.
 
+## When to Add New Evals
+- New governance rules or gates (required files, policy updates).
+- New asset types (new templates, new prompt schema).
+- Incidents/regressions (codify the failure as an eval).
+- Before adding new release gates.
+- After bootstrap completion to cover common errors.
+
+## Ownership
+- Primary: `@aaa/qa`
+- Approval: `@aaa/architect`
+
 ## Dataset & Baselines
 - Datasets live under `datasets/` (TBD structure).
 - Baselines live under `baselines/` and are keyed by tag.
