@@ -39,6 +39,9 @@ See `ASSET_PROMOTION.md` for the checklist and approval flow.
 - Primary: `@aaa/qa`
 - Approval: `@aaa/architect`
 
+## Automation Hook
+- Use `aaa-governance-audit` to run all governance checks and write a report to `aaa-tpl-docs/reports/`.
+
 ## Dataset & Baselines
 - Datasets live under `datasets/` (TBD structure).
 - Baselines live under `baselines/` and are keyed by tag.
