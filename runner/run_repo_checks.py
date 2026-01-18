@@ -4,6 +4,11 @@ import os
 import re
 import sys
 
+try:
+    from jsonschema import Draft202012Validator
+except ImportError:  # pragma: no cover - optional runtime dependency
+    Draft202012Validator = None
+
 
 REQUIRED_SECTIONS = [
     "## Purpose / Scope",
@@ -87,25 +92,6 @@ def load_schema(schema_path):
         return json.load(handle)
 
 
-def validate_prompt(schema, prompt_obj):
-    required = schema.get("required", [])
-    props = schema.get("properties", {})
-    missing = [key for key in required if key not in prompt_obj]
-    if missing:
-        return False, [f"missing required fields: {', '.join(missing)}"]
-
-    for key, spec in props.items():
-        if key not in prompt_obj:
-            continue
-        expected_type = spec.get("type")
-        if expected_type == "string" and not isinstance(prompt_obj[key], str):
-            return False, [f"{key} must be string"]
-        if expected_type == "object" and not isinstance(prompt_obj[key], dict):
-            return False, [f"{key} must be object"]
-
-    return True, []
-
-
 def check_prompt_schema(repo_path, schema_path, prompts_dir):
     schema_file = os.path.join(repo_path, schema_path)
     if not os.path.isfile(schema_file):
@@ -115,7 +101,11 @@ def check_prompt_schema(repo_path, schema_path, prompts_dir):
     if not os.path.isdir(prompts_root):
         return False, [f"{prompts_dir} missing"]
 
+    if Draft202012Validator is None:
+        return False, ["jsonschema is not installed"]
+
     schema = load_schema(schema_file)
+    validator = Draft202012Validator(schema)
     failures = []
     for root, _dirs, files in os.walk(prompts_root):
         for name in files:
@@ -127,9 +117,10 @@ def check_prompt_schema(repo_path, schema_path, prompts_dir):
             except json.JSONDecodeError as exc:
                 failures.append(f"{os.path.relpath(path, repo_path)} invalid JSON: {exc}")
                 continue
-            ok, issues = validate_prompt(schema, payload)
-            if not ok:
-                failures.append(f"{os.path.relpath(path, repo_path)}: {', '.join(issues)}")
+            errors = sorted(validator.iter_errors(payload), key=lambda err: err.path)
+            if errors:
+                detail = "; ".join(err.message for err in errors)
+                failures.append(f"{os.path.relpath(path, repo_path)}: {detail}")
 
     return len(failures) == 0, failures
 

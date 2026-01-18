@@ -39,6 +39,7 @@ aaa eval run --suite core --source ./aaa-evals
 
 Example runner usage:
 ```bash
+pip install -r runner/requirements.txt
 python runner/run_repo_checks.py --check readme --repo /path/to/repo
 python runner/run_repo_checks.py --check workflow --repo /path/to/repo
 python runner/run_repo_checks.py --check skills --repo /path/to/aaa-tools --skills-root skills
