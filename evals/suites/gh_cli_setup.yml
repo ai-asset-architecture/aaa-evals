@@ -1,0 +1,5 @@
+name: gh_cli_setup
+cases: evals/cases/gh_cli_setup.jsonl
+baseline: evals/baselines/gh_cli_setup.baseline.json
+runner: runner/run_gh_cli_setup.py
+check: gh_cli_setup

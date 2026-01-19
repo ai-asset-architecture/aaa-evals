@@ -24,6 +24,7 @@ New eval suites must include clear pass/fail criteria and a baseline. Dataset up
 - `workflow_tag_refs` - checks workflows reference aaa-actions by tag
 - `skills_structure` - checks skills folders contain SKILL.md
 - `prompt_schema` - validates prompts against prompt.schema.json
+- `gh_cli_setup` - checks `gh` auth status and git identity setup
 
 ## Asset Promotion Pipeline
 See `ASSET_PROMOTION.md` for the checklist and approval flow.
@@ -58,4 +59,5 @@ python runner/run_repo_checks.py --check readme --repo /path/to/repo
 python runner/run_repo_checks.py --check workflow --repo /path/to/repo
 python runner/run_repo_checks.py --check skills --repo /path/to/aaa-tools --skills-root skills
 python runner/run_repo_checks.py --check prompt --repo /path/to/aaa-prompts --schema-path prompt.schema.json --prompts-dir prompts
+python runner/run_gh_cli_setup.py --check gh_cli_setup
 ```
