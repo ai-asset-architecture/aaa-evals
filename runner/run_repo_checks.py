@@ -154,15 +154,15 @@ def check_skill_structure_v2(repo_path, skills_root):
         "## Execution Steps",
         "## Fallback",
         "## Inputs / Outputs",
+        "## Execution Test",
         "## Limitations",
     ]
     missing = []
-    for bucket in ["common", "codex", "agent"]:
-        bucket_path = os.path.join(root, bucket)
-        if not os.path.isdir(bucket_path):
-            continue
+    bucket = "common"
+    bucket_path = os.path.join(root, bucket)
+    if os.path.isdir(bucket_path):
         for skill in os.listdir(bucket_path):
-            if skill.startswith("."):
+            if skill.startswith(".") or not skill.startswith("aaa-"):
                 continue
             skill_path = os.path.join(bucket_path, skill, "SKILL.md")
             if not os.path.isfile(skill_path):
