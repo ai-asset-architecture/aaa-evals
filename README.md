@@ -27,6 +27,7 @@ New eval suites must include clear pass/fail criteria and a baseline. Dataset up
 - `member_bootstrap_prereq` - checks member SOP includes auth/setup and dual-path flow
 - `private_download_sanity` - checks SOP uses gh api and JSON sanity checks for private files
 - `start_here_sync` - checks org profile Start Here matches member SOP essentials
+- `skill_structure_v2` - checks skills include Routing/Execution/Fallback/IO/Limitations blocks
 - `gh_cli_setup` - checks `gh` auth status and git identity setup
 - `gh_org_audit` - audits org repos for README/CODEOWNERS/workflow pinning/branch protection
 

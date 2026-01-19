@@ -144,6 +144,37 @@ def check_skills(repo_path, skills_root):
     return len(missing) == 0, missing
 
 
+def check_skill_structure_v2(repo_path, skills_root):
+    root = os.path.join(repo_path, skills_root)
+    if not os.path.isdir(root):
+        return False, [f"{skills_root} missing"]
+
+    required_sections = [
+        "## Routing Logic",
+        "## Execution Steps",
+        "## Fallback",
+        "## Inputs / Outputs",
+        "## Limitations",
+    ]
+    missing = []
+    for bucket in ["common", "codex", "agent"]:
+        bucket_path = os.path.join(root, bucket)
+        if not os.path.isdir(bucket_path):
+            continue
+        for skill in os.listdir(bucket_path):
+            if skill.startswith("."):
+                continue
+            skill_path = os.path.join(bucket_path, skill, "SKILL.md")
+            if not os.path.isfile(skill_path):
+                continue
+            content = read_file(skill_path)
+            absent = [section for section in required_sections if section not in content]
+            if absent:
+                missing.append(f"{skills_root}/{bucket}/{skill}: missing {', '.join(absent)}")
+
+    return len(missing) == 0, missing
+
+
 def load_schema(schema_path):
     with open(schema_path, "r", encoding="utf-8") as handle:
         return json.load(handle)
@@ -216,6 +247,7 @@ def main():
             "member_bootstrap_prereq",
             "private_download_sanity",
             "start_here_sync",
+            "skill_structure_v2",
         ],
     )
     parser.add_argument("--repo", required=True, help="Target repo path")
@@ -239,7 +271,10 @@ def main():
     elif args.check == "private_download_sanity":
         passed, details = check_private_download_sanity(args.repo, args.sop_path)
     else:
-        passed, details = check_start_here_sync(args.repo, args.profile_path)
+        if args.check == "skill_structure_v2":
+            passed, details = check_skill_structure_v2(args.repo, args.skills_root)
+        else:
+            passed, details = check_start_here_sync(args.repo, args.profile_path)
 
     output = {
         "check": args.check,

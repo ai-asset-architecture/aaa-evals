@@ -1,0 +1,3 @@
+name: skill_structure_v2
+cases: evals/cases/skill_structure_v2.jsonl
+baseline: evals/baselines/skill_structure_v2.baseline.json
