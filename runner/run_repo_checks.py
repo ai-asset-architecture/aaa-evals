@@ -40,6 +40,60 @@ def check_readme(repo_path):
     return len(missing) == 0, missing
 
 
+def _find_missing(content, required):
+    return [item for item in required if item not in content]
+
+
+def check_member_bootstrap_prereq(repo_path, sop_path):
+    sop_file = os.path.join(repo_path, sop_path)
+    if not os.path.isfile(sop_file):
+        return False, [f"{sop_path} missing"]
+
+    content = read_file(sop_file)
+    required = [
+        "gh auth setup-git",
+        "pip install \"git+https://github.com/ai-asset-architecture/aaa-tools.git@",
+        "aaa init validate-plan",
+        "模式 A",
+        "模式 B",
+    ]
+    missing = _find_missing(content, required)
+    return len(missing) == 0, missing
+
+
+def check_private_download_sanity(repo_path, sop_path):
+    sop_file = os.path.join(repo_path, sop_path)
+    if not os.path.isfile(sop_file):
+        return False, [f"{sop_path} missing"]
+
+    content = read_file(sop_file)
+    required = [
+        "gh api -H \"Accept: application/vnd.github.v3.raw\"",
+        "/tmp/aaa_plan_resolved.json",
+        "/tmp/aaa_plan_schema.json",
+        "json.load",
+        "grep -n \"{{\"",
+    ]
+    missing = _find_missing(content, required)
+    return len(missing) == 0, missing
+
+
+def check_start_here_sync(repo_path, profile_path):
+    profile_file = os.path.join(repo_path, profile_path)
+    if not os.path.isfile(profile_file):
+        return False, [f"{profile_path} missing"]
+
+    content = read_file(profile_file)
+    required = [
+        "gh auth setup-git",
+        "gh api -H \"Accept: application/vnd.github.v3.raw\"",
+        "pip install \"git+https://github.com/ai-asset-architecture/aaa-tools.git@",
+        "aaa-tpl-docs/blob/main/docs/new-project-sop.md",
+    ]
+    missing = _find_missing(content, required)
+    return len(missing) == 0, missing
+
+
 def check_workflows(repo_path):
     workflows_dir = os.path.join(repo_path, ".github", "workflows")
     if not os.path.isdir(workflows_dir):
@@ -151,11 +205,25 @@ def check_prompt_schema(repo_path, schema_path, prompts_dir):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--check", required=True, choices=["readme", "workflow", "skills", "prompt"])
+    parser.add_argument(
+        "--check",
+        required=True,
+        choices=[
+            "readme",
+            "workflow",
+            "skills",
+            "prompt",
+            "member_bootstrap_prereq",
+            "private_download_sanity",
+            "start_here_sync",
+        ],
+    )
     parser.add_argument("--repo", required=True, help="Target repo path")
     parser.add_argument("--skills-root", default="skills")
     parser.add_argument("--schema-path", default="prompt.schema.json")
     parser.add_argument("--prompts-dir", default="prompts")
+    parser.add_argument("--sop-path", default="docs/new-project-sop.md")
+    parser.add_argument("--profile-path", default="profile/README.md")
     args = parser.parse_args()
 
     if args.check == "readme":
@@ -164,8 +232,14 @@ def main():
         passed, details = check_workflows(args.repo)
     elif args.check == "skills":
         passed, details = check_skills(args.repo, args.skills_root)
-    else:
+    elif args.check == "prompt":
         passed, details = check_prompt_schema(args.repo, args.schema_path, args.prompts_dir)
+    elif args.check == "member_bootstrap_prereq":
+        passed, details = check_member_bootstrap_prereq(args.repo, args.sop_path)
+    elif args.check == "private_download_sanity":
+        passed, details = check_private_download_sanity(args.repo, args.sop_path)
+    else:
+        passed, details = check_start_here_sync(args.repo, args.profile_path)
 
     output = {
         "check": args.check,

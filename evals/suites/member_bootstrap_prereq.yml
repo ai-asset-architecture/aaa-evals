@@ -1,0 +1,3 @@
+name: member_bootstrap_prereq
+cases: evals/cases/member_bootstrap_prereq.jsonl
+baseline: evals/baselines/member_bootstrap_prereq.baseline.json

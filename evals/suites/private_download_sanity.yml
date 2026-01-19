@@ -1,0 +1,3 @@
+name: private_download_sanity
+cases: evals/cases/private_download_sanity.jsonl
+baseline: evals/baselines/private_download_sanity.baseline.json
