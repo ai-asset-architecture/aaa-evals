@@ -29,6 +29,7 @@ This checklist defines the minimum steps to promote eval assets into the main li
 ## When to Add New Evals
 - New governance rules or gates (required files, policy updates).
 - New asset types (new templates, new prompt schema).
+- Member onboarding flow changes (auth, private download, SOP steps).
 - Incidents/regressions (codify the failure as an eval).
 - Before adding new release gates.
 - After bootstrap completion to cover common errors.
