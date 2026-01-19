@@ -1,0 +1,5 @@
+name: gh_org_audit
+cases: evals/cases/gh_org_audit.jsonl
+baseline: evals/baselines/gh_org_audit.baseline.json
+runner: runner/run_github_audit.py
+check: gh_org_audit
