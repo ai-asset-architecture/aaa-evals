@@ -133,6 +133,63 @@ def check_onboarding_doc_drift(repo_path):
     return True, []
 
 
+COMMAND_REQUIRED = [
+    "gh auth setup-git",
+    "python3 -m pip install \"git+https://github.com/ai-asset-architecture/aaa-tools.git@",
+    "plan.v0.1.json?ref=",
+]
+
+
+def check_onboarding_command_integrity(repo_path):
+    profile_path = Path(repo_path) / ".github/profile/README.md"
+    sop_path = Path(repo_path) / "aaa-tpl-docs/docs/new-project-sop.md"
+
+    if not profile_path.is_file():
+        return False, [".github/profile/README.md missing"]
+    if not sop_path.is_file():
+        return False, ["aaa-tpl-docs/docs/new-project-sop.md missing"]
+
+    profile = profile_path.read_text(encoding="utf-8")
+    sop = sop_path.read_text(encoding="utf-8")
+
+    missing = []
+    for required in COMMAND_REQUIRED:
+        if required not in profile:
+            missing.append(f"profile missing: {required}")
+        if required not in sop:
+            missing.append(f"sop missing: {required}")
+
+    profile_versions = VERSION_RE.findall(profile)
+    sop_versions = VERSION_RE.findall(sop)
+    profile_plan_refs = PLAN_REF_RE.findall(profile)
+    sop_plan_refs = PLAN_REF_RE.findall(sop)
+
+    if profile_versions != sop_versions:
+        missing.append(f"version mismatch: profile={profile_versions} sop={sop_versions}")
+    if profile_plan_refs != sop_plan_refs:
+        missing.append(f"plan ref mismatch: profile={profile_plan_refs} sop={sop_plan_refs}")
+
+    return len(missing) == 0, missing
+
+
+def check_plan_schema_ref_sync(repo_path):
+    sop_path = Path(repo_path) / "aaa-tpl-docs/docs/new-project-sop.md"
+    if not sop_path.is_file():
+        return False, ["aaa-tpl-docs/docs/new-project-sop.md missing"]
+
+    content = sop_path.read_text(encoding="utf-8")
+    plan_refs = PLAN_REF_RE.findall(content)
+    schema_refs = SCHEMA_REF_RE.findall(content)
+
+    if not plan_refs or not schema_refs:
+        return False, ["plan/schema ref missing"]
+
+    if set(plan_refs) != set(schema_refs):
+        return False, [f"plan/schema ref mismatch: plan={plan_refs} schema={schema_refs}"]
+
+    return True, []
+
+
 def check_start_here_sync(repo_path, profile_path):
     profile_file = os.path.join(repo_path, profile_path)
     if not os.path.isfile(profile_file):
@@ -304,6 +361,8 @@ def main():
             "start_here_sync",
             "skill_structure_v2",
             "onboarding_doc_drift",
+            "onboarding_command_integrity",
+            "plan_schema_ref_sync",
         ],
     )
     parser.add_argument("--repo", required=True, help="Target repo path")
@@ -328,6 +387,10 @@ def main():
         passed, details = check_private_download_sanity(args.repo, args.sop_path)
     elif args.check == "onboarding_doc_drift":
         passed, details = check_onboarding_doc_drift(args.repo)
+    elif args.check == "onboarding_command_integrity":
+        passed, details = check_onboarding_command_integrity(args.repo)
+    elif args.check == "plan_schema_ref_sync":
+        passed, details = check_plan_schema_ref_sync(args.repo)
     else:
         if args.check == "skill_structure_v2":
             passed, details = check_skill_structure_v2(args.repo, args.skills_root)
