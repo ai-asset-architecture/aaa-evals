@@ -67,3 +67,10 @@ python runner/run_repo_checks.py --check prompt --repo /path/to/aaa-prompts --sc
 python runner/run_gh_cli_setup.py --check gh_cli_setup
 python runner/run_github_audit.py
 ```
+
+## Onboarding Doc Drift
+
+Run:
+```bash
+python3 runner/run_repo_checks.py --check onboarding_doc_drift --repo /path/to/workspace
+```
