@@ -1,0 +1,3 @@
+name: cli_contract_sync
+cases:
+  - evals/cases/cli_contract_sync.jsonl

@@ -190,6 +190,95 @@ def check_plan_schema_ref_sync(repo_path):
     return True, []
 
 
+def check_cli_contract_sync(repo_path):
+    missing = []
+    profile_path = Path(repo_path) / ".github/profile/README.md"
+    sop_path = Path(repo_path) / "aaa-tpl-docs/docs/new-project-sop.md"
+    user_contract_path = Path(repo_path) / "aaa-tpl-docs/docs/contracts/aaa-cli-contract.md"
+    cli_contract_path = Path(repo_path) / "aaa-tools/specs/CLI_CONTRACT.md"
+    runbook_path = Path(repo_path) / "aaa-tools/runbooks/init/AGENT_BOOTSTRAP.md"
+
+    required_files = [
+        (profile_path, ".github/profile/README.md"),
+        (sop_path, "aaa-tpl-docs/docs/new-project-sop.md"),
+        (user_contract_path, "aaa-tpl-docs/docs/contracts/aaa-cli-contract.md"),
+        (cli_contract_path, "aaa-tools/specs/CLI_CONTRACT.md"),
+        (runbook_path, "aaa-tools/runbooks/init/AGENT_BOOTSTRAP.md"),
+    ]
+    for path, label in required_files:
+        if not path.is_file():
+            missing.append(f"{label} missing")
+    if missing:
+        return False, missing
+
+    profile = profile_path.read_text(encoding="utf-8")
+    sop = sop_path.read_text(encoding="utf-8")
+    user_contract = user_contract_path.read_text(encoding="utf-8")
+    cli_contract = cli_contract_path.read_text(encoding="utf-8")
+
+    required_common = [
+        "gh auth setup-git",
+        "python3 -m pip install \"git+https://github.com/ai-asset-architecture/aaa-tools.git@",
+        "plan.v0.1.json?ref=",
+    ]
+    for required in required_common:
+        if required not in profile:
+            missing.append(f"profile missing: {required}")
+        if required not in sop:
+            missing.append(f"sop missing: {required}")
+
+    required_contract_steps = [
+        "aaa init validate-plan",
+        "aaa init repo-checks",
+        "plan.schema.json?ref=",
+        "aaa-tools/runbooks/init/AGENT_BOOTSTRAP.md",
+    ]
+    for required in required_contract_steps:
+        if required not in sop:
+            missing.append(f"sop missing: {required}")
+        if required not in user_contract:
+            missing.append(f"user contract missing: {required}")
+
+    if "post-init audit" not in cli_contract:
+        missing.append("cli contract missing: post-init audit requirement")
+
+    versions = set()
+    for label, content in [("profile", profile), ("sop", sop), ("user contract", user_contract)]:
+        matches = VERSION_RE.findall(content)
+        if not matches:
+            missing.append(f"{label} missing version tag")
+            continue
+        versions.update(matches)
+    if len({v.replace("@", "") for v in versions}) > 1:
+        missing.append(f"version mismatch: {sorted(versions)}")
+
+    sop_plan_refs = PLAN_REF_RE.findall(sop)
+    sop_schema_refs = SCHEMA_REF_RE.findall(sop)
+    contract_plan_refs = PLAN_REF_RE.findall(user_contract)
+    contract_schema_refs = SCHEMA_REF_RE.findall(user_contract)
+
+    if not sop_plan_refs or not sop_schema_refs:
+        missing.append("sop missing plan/schema refs")
+    if not contract_plan_refs or not contract_schema_refs:
+        missing.append("user contract missing plan/schema refs")
+    if set(sop_plan_refs) != set(sop_schema_refs):
+        missing.append(f"sop plan/schema ref mismatch: plan={sop_plan_refs} schema={sop_schema_refs}")
+    if set(contract_plan_refs) != set(contract_schema_refs):
+        missing.append(
+            f"user contract plan/schema ref mismatch: plan={contract_plan_refs} schema={contract_schema_refs}"
+        )
+    if set(sop_plan_refs) != set(contract_plan_refs):
+        missing.append(
+            f"plan ref mismatch: sop={sop_plan_refs} user_contract={contract_plan_refs}"
+        )
+    if set(sop_schema_refs) != set(contract_schema_refs):
+        missing.append(
+            f"schema ref mismatch: sop={sop_schema_refs} user_contract={contract_schema_refs}"
+        )
+
+    return len(missing) == 0, missing
+
+
 def check_start_here_sync(repo_path, profile_path):
     profile_file = os.path.join(repo_path, profile_path)
     if not os.path.isfile(profile_file):
@@ -363,6 +452,7 @@ def main():
             "onboarding_doc_drift",
             "onboarding_command_integrity",
             "plan_schema_ref_sync",
+            "cli_contract_sync",
         ],
     )
     parser.add_argument("--repo", required=True, help="Target repo path")
@@ -391,6 +481,8 @@ def main():
         passed, details = check_onboarding_command_integrity(args.repo)
     elif args.check == "plan_schema_ref_sync":
         passed, details = check_plan_schema_ref_sync(args.repo)
+    elif args.check == "cli_contract_sync":
+        passed, details = check_cli_contract_sync(args.repo)
     else:
         if args.check == "skill_structure_v2":
             passed, details = check_skill_structure_v2(args.repo, args.skills_root)
