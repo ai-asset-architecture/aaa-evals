@@ -1,0 +1,3 @@
+name: runbook_schema_validate
+cases:
+  - evals/cases/runbook_schema_validate.jsonl

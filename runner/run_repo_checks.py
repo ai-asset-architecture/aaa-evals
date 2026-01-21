@@ -285,6 +285,42 @@ def check_post_init_audit_required(repo_path):
     user_contract_path = Path(repo_path) / "aaa-tpl-docs/docs/contracts/aaa-cli-contract.md"
     runbook_path = Path(repo_path) / "aaa-tools/runbooks/init/POST_INIT_AUDIT.md"
 
+
+def check_runbook_schema_validate(repo_path):
+    schema_path = Path(repo_path) / "aaa-tools/specs/runbook.schema.json"
+    runbooks_root = Path(repo_path) / "aaa-tools/runbooks"
+
+    if not schema_path.is_file():
+        return False, ["aaa-tools/specs/runbook.schema.json missing"]
+    if not runbooks_root.is_dir():
+        return False, ["aaa-tools/runbooks missing"]
+
+    try:
+        schema = json.loads(schema_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        return False, [f"schema invalid JSON: {exc}"]
+
+    try:
+        from jsonschema import Draft202012Validator
+    except ImportError:
+        return False, ["jsonschema not available"]
+
+    validator = Draft202012Validator(schema)
+    failures = []
+    for path in runbooks_root.rglob("*.yaml"):
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            failures.append(f"{path.relative_to(Path(repo_path))}: invalid JSON: {exc}")
+            continue
+        errors = sorted(validator.iter_errors(payload), key=lambda err: err.path)
+        if errors:
+            detail = "; ".join(err.message for err in errors)
+            failures.append(f"{path.relative_to(Path(repo_path))}: {detail}")
+
+    return len(failures) == 0, failures
+
+
     required_files = [
         (sop_path, "aaa-tpl-docs/docs/new-project-sop.md"),
         (user_contract_path, "aaa-tpl-docs/docs/contracts/aaa-cli-contract.md"),
@@ -496,6 +532,7 @@ def main():
             "plan_schema_ref_sync",
             "cli_contract_sync",
             "post_init_audit_required",
+            "runbook_schema_validate",
         ],
     )
     parser.add_argument("--repo", required=True, help="Target repo path")
@@ -528,6 +565,8 @@ def main():
         passed, details = check_cli_contract_sync(args.repo)
     elif args.check == "post_init_audit_required":
         passed, details = check_post_init_audit_required(args.repo)
+    elif args.check == "runbook_schema_validate":
+        passed, details = check_runbook_schema_validate(args.repo)
     else:
         if args.check == "skill_structure_v2":
             passed, details = check_skill_structure_v2(args.repo, args.skills_root)
