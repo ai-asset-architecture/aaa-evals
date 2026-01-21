@@ -1,0 +1,3 @@
+name: plan_schema_ref_sync
+cases: evals/cases/plan_schema_ref_sync.jsonl
+baseline: evals/baselines/plan_schema_ref_sync.baseline.json
