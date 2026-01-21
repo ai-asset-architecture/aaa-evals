@@ -64,6 +64,8 @@ python runner/run_repo_checks.py --check readme --repo /path/to/repo
 python runner/run_repo_checks.py --check workflow --repo /path/to/repo
 python runner/run_repo_checks.py --check skills --repo /path/to/aaa-tools --skills-root skills
 python runner/run_repo_checks.py --check prompt --repo /path/to/aaa-prompts --schema-path prompt.schema.json --prompts-dir prompts
+python runner/run_repo_checks.py --check onboarding_command_integrity --repo /path/to/workspace
+python runner/run_repo_checks.py --check plan_schema_ref_sync --repo /path/to/workspace
 python runner/run_gh_cli_setup.py --check gh_cli_setup
 python runner/run_github_audit.py
 ```
