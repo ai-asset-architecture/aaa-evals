@@ -279,6 +279,48 @@ def check_cli_contract_sync(repo_path):
     return len(missing) == 0, missing
 
 
+def check_post_init_audit_required(repo_path):
+    missing = []
+    sop_path = Path(repo_path) / "aaa-tpl-docs/docs/new-project-sop.md"
+    user_contract_path = Path(repo_path) / "aaa-tpl-docs/docs/contracts/aaa-cli-contract.md"
+    runbook_path = Path(repo_path) / "aaa-tools/runbooks/init/POST_INIT_AUDIT.md"
+
+    required_files = [
+        (sop_path, "aaa-tpl-docs/docs/new-project-sop.md"),
+        (user_contract_path, "aaa-tpl-docs/docs/contracts/aaa-cli-contract.md"),
+        (runbook_path, "aaa-tools/runbooks/init/POST_INIT_AUDIT.md"),
+    ]
+    for path, label in required_files:
+        if not path.is_file():
+            missing.append(f"{label} missing")
+    if missing:
+        return False, missing
+
+    sop = sop_path.read_text(encoding="utf-8")
+    user_contract = user_contract_path.read_text(encoding="utf-8")
+    runbook = runbook_path.read_text(encoding="utf-8")
+
+    required_doc_refs = [
+        "aaa init repo-checks",
+        "aaa-tools/runbooks/init/POST_INIT_AUDIT.md",
+    ]
+    for required in required_doc_refs:
+        if required not in sop:
+            missing.append(f"sop missing: {required}")
+        if required not in user_contract:
+            missing.append(f"user contract missing: {required}")
+
+    required_runbook = [
+        "aaa init repo-checks",
+        "--suite governance",
+    ]
+    for required in required_runbook:
+        if required not in runbook:
+            missing.append(f"runbook missing: {required}")
+
+    return len(missing) == 0, missing
+
+
 def check_start_here_sync(repo_path, profile_path):
     profile_file = os.path.join(repo_path, profile_path)
     if not os.path.isfile(profile_file):
@@ -453,6 +495,7 @@ def main():
             "onboarding_command_integrity",
             "plan_schema_ref_sync",
             "cli_contract_sync",
+            "post_init_audit_required",
         ],
     )
     parser.add_argument("--repo", required=True, help="Target repo path")
@@ -483,6 +526,8 @@ def main():
         passed, details = check_plan_schema_ref_sync(args.repo)
     elif args.check == "cli_contract_sync":
         passed, details = check_cli_contract_sync(args.repo)
+    elif args.check == "post_init_audit_required":
+        passed, details = check_post_init_audit_required(args.repo)
     else:
         if args.check == "skill_structure_v2":
             passed, details = check_skill_structure_v2(args.repo, args.skills_root)
