@@ -35,6 +35,7 @@ New eval suites must include clear pass/fail criteria and a baseline. Dataset up
 - `onboarding_command_integrity` - checks README/SOP command parity / 檢查 README 與 SOP 指令一致
 - `plan_schema_ref_sync` - checks plan/schema tag parity in SOP / 檢查 SOP 中 plan/schema tag 一致
 - `cli_contract_sync` - checks SOP/user contract align with CLI contract / 檢查 SOP 與使用者合約對齊 CLI 合約
+- `post_init_audit_required` - checks post-init audit runbook is referenced and present / 檢查 post-init 稽核 runbook 已引用且存在
 
 ## Asset Promotion Pipeline
 See `ASSET_PROMOTION.md` for the checklist and approval flow.
@@ -72,6 +73,7 @@ python runner/run_repo_checks.py --check prompt --repo /path/to/aaa-prompts --sc
 python runner/run_repo_checks.py --check onboarding_command_integrity --repo /path/to/workspace
 python runner/run_repo_checks.py --check plan_schema_ref_sync --repo /path/to/workspace
 python runner/run_repo_checks.py --check cli_contract_sync --repo /path/to/workspace
+python runner/run_repo_checks.py --check post_init_audit_required --repo /path/to/workspace
 python runner/run_gh_cli_setup.py --check gh_cli_setup
 python runner/run_github_audit.py
 ```
