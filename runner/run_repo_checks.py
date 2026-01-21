@@ -3,6 +3,7 @@ import json
 import os
 import re
 import sys
+from pathlib import Path
 
 try:
     from jsonschema import Draft202012Validator
@@ -76,6 +77,60 @@ def check_private_download_sanity(repo_path, sop_path):
     ]
     missing = _find_missing(content, required)
     return len(missing) == 0, missing
+
+
+DOC_DRIFT_FILES = [
+    ".github/profile/README.md",
+    "aaa-tpl-docs/docs/new-project-sop.md",
+    "aaa-tpl-docs/PROJECT_PLAYBOOK.md",
+]
+
+VERSION_RE = re.compile(r"@v\d+\.\d+\.\d+")
+PLAN_REF_RE = re.compile(r"plan\.v0\.1\.json\?ref=(v\d+\.\d+\.\d+)")
+SCHEMA_REF_RE = re.compile(r"plan\.schema\.json\?ref=(v\d+\.\d+\.\d+)")
+
+
+def _extract_versions(text):
+    versions = set(VERSION_RE.findall(text))
+    plan_refs = set(PLAN_REF_RE.findall(text))
+    schema_refs = set(SCHEMA_REF_RE.findall(text))
+    return versions, plan_refs, schema_refs
+
+
+def check_onboarding_doc_drift(repo_path):
+    missing = []
+    versions = set()
+    plan_refs = set()
+    schema_refs = set()
+
+    for rel_path in DOC_DRIFT_FILES:
+        abs_path = Path(repo_path) / rel_path
+        if not abs_path.is_file():
+            missing.append(f"missing: {rel_path}")
+            continue
+        content = abs_path.read_text(encoding="utf-8")
+
+        if "{{AAA_VERSION}}" in content or "@<tag>" in content:
+            content = content.replace("{{AAA_VERSION}}", "").replace("@<tag>", "")
+
+        v, p, s = _extract_versions(content)
+        versions.update(v)
+        plan_refs.update(p)
+        schema_refs.update(s)
+
+    if missing:
+        return False, missing
+
+    if len({v.replace("@", "") for v in versions}) > 1:
+        return False, [f"version mismatch: {sorted(versions)}"]
+
+    if len(plan_refs) > 1:
+        return False, [f"plan ref mismatch: {sorted(plan_refs)}"]
+
+    if len(schema_refs) > 1:
+        return False, [f"schema ref mismatch: {sorted(schema_refs)}"]
+
+    return True, []
 
 
 def check_start_here_sync(repo_path, profile_path):
@@ -248,6 +303,7 @@ def main():
             "private_download_sanity",
             "start_here_sync",
             "skill_structure_v2",
+            "onboarding_doc_drift",
         ],
     )
     parser.add_argument("--repo", required=True, help="Target repo path")
@@ -270,6 +326,8 @@ def main():
         passed, details = check_member_bootstrap_prereq(args.repo, args.sop_path)
     elif args.check == "private_download_sanity":
         passed, details = check_private_download_sanity(args.repo, args.sop_path)
+    elif args.check == "onboarding_doc_drift":
+        passed, details = check_onboarding_doc_drift(args.repo)
     else:
         if args.check == "skill_structure_v2":
             passed, details = check_skill_structure_v2(args.repo, args.skills_root)
