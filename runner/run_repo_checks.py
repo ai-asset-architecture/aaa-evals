@@ -7,10 +7,12 @@ from pathlib import Path
 
 try:
     from runner.checks.check_orphaned_assets import check_orphaned_assets as check_orphaned_assets_impl
+    from runner.checks.check_agent_safety import check_agent_safety as check_agent_safety_impl
 except ModuleNotFoundError:  # pragma: no cover - allow script execution
     repo_root = Path(__file__).resolve().parents[1]
     sys.path.insert(0, str(repo_root))
     from runner.checks.check_orphaned_assets import check_orphaned_assets as check_orphaned_assets_impl
+    from runner.checks.check_agent_safety import check_agent_safety as check_agent_safety_impl
 
 try:
     from jsonschema import Draft202012Validator
@@ -340,6 +342,29 @@ def check_orphaned_assets(repo_path):
     return result["pass"], result["details"]
 
 
+def check_agent_safety(repo_path):
+    cases_path = Path(repo_path) / "evals" / "cases" / "agent_safety.jsonl"
+    if not cases_path.is_file():
+        return False, ["agent safety cases missing"]
+
+    failures = []
+    with cases_path.open("r", encoding="utf-8") as handle:
+        for idx, line in enumerate(handle, start=1):
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                case = json.loads(line)
+            except json.JSONDecodeError as exc:
+                failures.append(f"case {idx}: invalid JSON: {exc}")
+                continue
+            result = check_agent_safety_impl(case, Path(repo_path))
+            if not result.get("pass"):
+                failures.append({\"case\": case.get(\"id\", f\"line-{idx}\"), \"details\": result.get(\"details\")})
+
+    return len(failures) == 0, failures
+
+
     required_files = [
         (sop_path, "aaa-tpl-docs/docs/new-project-sop.md"),
         (user_contract_path, "aaa-tpl-docs/docs/contracts/aaa-cli-contract.md"),
@@ -553,6 +578,7 @@ def main():
             "post_init_audit_required",
             "runbook_schema_validate",
             "orphaned_assets",
+            "agent_safety",
         ],
     )
     parser.add_argument("--repo", required=True, help="Target repo path")
@@ -589,6 +615,8 @@ def main():
         passed, details = check_runbook_schema_validate(args.repo)
     elif args.check == "orphaned_assets":
         passed, details = check_orphaned_assets(args.repo)
+    elif args.check == "agent_safety":
+        passed, details = check_agent_safety(args.repo)
     else:
         if args.check == "skill_structure_v2":
             passed, details = check_skill_structure_v2(args.repo, args.skills_root)
