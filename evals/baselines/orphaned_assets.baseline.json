@@ -1,0 +1,17 @@
+{
+  "check": "orphaned_assets",
+  "results": [
+    {
+      "id": "orphaned-clean",
+      "pass": true,
+      "details": []
+    },
+    {
+      "id": "orphaned-dirty",
+      "pass": false,
+      "details": [
+        "orphaned_asset"
+      ]
+    }
+  ]
+}

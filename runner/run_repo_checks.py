@@ -5,7 +5,12 @@ import re
 import sys
 from pathlib import Path
 
-from runner.checks.check_orphaned_assets import check_orphaned_assets as check_orphaned_assets_impl
+try:
+    from runner.checks.check_orphaned_assets import check_orphaned_assets as check_orphaned_assets_impl
+except ModuleNotFoundError:  # pragma: no cover - allow script execution
+    repo_root = Path(__file__).resolve().parents[1]
+    sys.path.insert(0, str(repo_root))
+    from runner.checks.check_orphaned_assets import check_orphaned_assets as check_orphaned_assets_impl
 
 try:
     from jsonschema import Draft202012Validator

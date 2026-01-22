@@ -1,0 +1,5 @@
+id: orphaned_assets
+description: Orphaned asset check across governance directories
+cases:
+  - orphaned-clean
+  - orphaned-dirty

@@ -1,0 +1,2 @@
+{"id":"orphaned-clean","repo":"runner/tests/fixtures/orphaned_assets/clean","expected_pass":true}
+{"id":"orphaned-dirty","repo":"runner/tests/fixtures/orphaned_assets/dirty","expected_pass":false}
