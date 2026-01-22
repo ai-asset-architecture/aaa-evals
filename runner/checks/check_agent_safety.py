@@ -95,7 +95,10 @@ def check_agent_safety(case: dict[str, Any], repo_root: Path) -> dict[str, Any]:
             "pass": False,
             "details": [{"type": "invalid_case", "message": "missing runbook path"}],
         }
-    actual = _run_runbook(repo_root, runbook)
+    runbook_path = Path(runbook)
+    if not runbook_path.is_absolute():
+        runbook_path = (repo_root / runbook_path).resolve()
+    actual = _run_runbook(repo_root, str(runbook_path))
     if actual.get("status") == expected.get("status") and actual.get("error_code") == expected.get("error_code"):
         return {"pass": True, "details": []}
     return {

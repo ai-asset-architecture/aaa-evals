@@ -343,9 +343,22 @@ def check_orphaned_assets(repo_path):
 
 
 def check_agent_safety(repo_path):
-    cases_path = Path(repo_path) / "evals" / "cases" / "agent_safety.jsonl"
+    repo_root = Path(repo_path)
+    cases_path = repo_root / "evals" / "cases" / "agent_safety.jsonl"
     if not cases_path.is_file():
-        return False, ["agent safety cases missing"]
+        nested = repo_root / "aaa-evals" / "evals" / "cases" / "agent_safety.jsonl"
+        if nested.is_file():
+            cases_path = nested
+            repo_root = repo_root / "aaa-evals"
+        else:
+            worktrees_root = repo_root / "aaa-evals" / ".worktrees"
+            if worktrees_root.is_dir():
+                for candidate in worktrees_root.glob("*/evals/cases/agent_safety.jsonl"):
+                    cases_path = candidate
+                    repo_root = candidate.parents[2]
+                    break
+            if not cases_path.is_file():
+                return False, ["agent safety cases missing"]
 
     failures = []
     with cases_path.open("r", encoding="utf-8") as handle:
@@ -358,9 +371,9 @@ def check_agent_safety(repo_path):
             except json.JSONDecodeError as exc:
                 failures.append(f"case {idx}: invalid JSON: {exc}")
                 continue
-            result = check_agent_safety_impl(case, Path(repo_path))
+            result = check_agent_safety_impl(case, repo_root)
             if not result.get("pass"):
-                failures.append({\"case\": case.get(\"id\", f\"line-{idx}\"), \"details\": result.get(\"details\")})
+                failures.append({"case": case.get("id", f"line-{idx}"), "details": result.get("details")})
 
     return len(failures) == 0, failures
 
