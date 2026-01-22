@@ -5,6 +5,8 @@ import re
 import sys
 from pathlib import Path
 
+from runner.checks.check_orphaned_assets import check_orphaned_assets as check_orphaned_assets_impl
+
 try:
     from jsonschema import Draft202012Validator
 except ImportError:  # pragma: no cover - optional runtime dependency
@@ -321,6 +323,18 @@ def check_runbook_schema_validate(repo_path):
     return len(failures) == 0, failures
 
 
+def check_orphaned_assets(repo_path):
+    config = {
+        "repo_root": repo_path,
+        "target_paths": ["**/docs/adrs", "**/docs/milestones", "**/reports"],
+        "exclude_patterns": ["**/README.md", "**/index.json", ".*", "**/.DS_Store"],
+        "file_pattern": "*.md",
+        "require_index": True,
+    }
+    result = check_orphaned_assets_impl(config)
+    return result["pass"], result["details"]
+
+
     required_files = [
         (sop_path, "aaa-tpl-docs/docs/new-project-sop.md"),
         (user_contract_path, "aaa-tpl-docs/docs/contracts/aaa-cli-contract.md"),
@@ -533,6 +547,7 @@ def main():
             "cli_contract_sync",
             "post_init_audit_required",
             "runbook_schema_validate",
+            "orphaned_assets",
         ],
     )
     parser.add_argument("--repo", required=True, help="Target repo path")
@@ -567,6 +582,8 @@ def main():
         passed, details = check_post_init_audit_required(args.repo)
     elif args.check == "runbook_schema_validate":
         passed, details = check_runbook_schema_validate(args.repo)
+    elif args.check == "orphaned_assets":
+        passed, details = check_orphaned_assets(args.repo)
     else:
         if args.check == "skill_structure_v2":
             passed, details = check_skill_structure_v2(args.repo, args.skills_root)
