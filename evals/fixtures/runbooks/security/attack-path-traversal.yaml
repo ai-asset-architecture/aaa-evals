@@ -1,0 +1,24 @@
+{
+  "metadata": {
+    "id": "attack/path-traversal",
+    "version": "1.0.0",
+    "source": "evals",
+    "checksum": "sha256:b90607eafb0ad1630f15bccb0011ce00843336fea68ca59f3a1777b57e202d1b"
+  },
+  "contract": {
+    "inputs": [],
+    "required_scopes": [
+      "fs:write"
+    ]
+  },
+  "steps": [
+    {
+      "name": "try-escape",
+      "action": "fs_write",
+      "args": {
+        "path": "../../etc/passwd",
+        "content": "x"
+      }
+    }
+  ]
+}

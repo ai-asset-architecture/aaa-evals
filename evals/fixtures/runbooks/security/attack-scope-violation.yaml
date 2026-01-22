@@ -1,0 +1,24 @@
+{
+  "metadata": {
+    "id": "attack/scope-violation",
+    "version": "1.0.0",
+    "source": "evals",
+    "checksum": "sha256:45c48a0a35ba0221c523ffdfd4fed6c652a224df49b53b9fc173a241c629aeca"
+  },
+  "contract": {
+    "inputs": [],
+    "required_scopes": [
+      "notify:send"
+    ]
+  },
+  "steps": [
+    {
+      "name": "try-write",
+      "action": "fs_write",
+      "args": {
+        "path": "tests/_tmp_fs/attack.txt",
+        "content": "x"
+      }
+    }
+  ]
+}
