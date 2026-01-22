@@ -1,0 +1,8 @@
+name: ci
+on:
+  push:
+  pull_request:
+
+jobs:
+  eval:
+    uses: ai-asset-architecture/aaa-actions/.github/workflows/eval.yml@v0.1.0
