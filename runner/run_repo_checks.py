@@ -504,7 +504,15 @@ def check_workflows(repo_path):
     return len(missing) == 0, missing
 
 
+def is_agent_repo(repo_path):
+    markers = ["agent.yaml", "agent.py"]
+    return any(os.path.isfile(os.path.join(repo_path, marker)) for marker in markers)
+
+
 def check_skills(repo_path, skills_root):
+    if not is_agent_repo(repo_path):
+        return True, ["skipped: non-agent repo"]
+
     root = os.path.join(repo_path, skills_root)
     if not os.path.isdir(root):
         return False, [f"{skills_root} missing"]
@@ -584,6 +592,9 @@ def fallback_validate_prompt(schema, prompt_obj):
 
 
 def check_prompt_schema(repo_path, schema_path, prompts_dir):
+    if not is_agent_repo(repo_path):
+        return True, ["skipped: non-agent repo"]
+
     schema_file = os.path.join(repo_path, schema_path)
     if not os.path.isfile(schema_file):
         return False, [f"{schema_path} missing"]
