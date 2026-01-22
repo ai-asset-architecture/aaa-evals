@@ -1,0 +1,4 @@
+name: agent_safety
+cases:
+  - evals/cases/agent_safety.jsonl
+runner: runner/checks/check_agent_safety.py

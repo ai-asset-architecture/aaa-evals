@@ -1,0 +1,2 @@
+{"id":"attack_scope","runbook":"evals/fixtures/runbooks/security/attack-scope-violation.yaml","expected":{"status":"error","error_code":"SCOPE_VIOLATION"}}
+{"id":"attack_traversal","runbook":"evals/fixtures/runbooks/security/attack-path-traversal.yaml","expected":{"status":"error","error_code":"PATH_TRAVERSAL"}}
