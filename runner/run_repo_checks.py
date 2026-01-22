@@ -334,7 +334,16 @@ def check_orphaned_assets(repo_path):
     config = {
         "repo_root": repo_path,
         "target_paths": ["**/docs/adrs", "**/docs/milestones", "**/reports"],
-        "exclude_patterns": ["**/README.md", "**/index.json", ".*", "**/.DS_Store"],
+        "exclude_patterns": [
+            "**/README.md",
+            "**/index.json",
+            ".*",
+            "**/.DS_Store",
+            "**/.venv-aaa/**",
+            "**/.aaa-tmp/**",
+            "**/.worktrees/**",
+            "**/aaa-evals/runner/tests/fixtures/**",
+        ],
         "file_pattern": "*.md",
         "require_index": True,
     }

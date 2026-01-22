@@ -47,6 +47,48 @@ class TestCheckOrphanedAssets(unittest.TestCase):
             self.assertTrue(orphaned)
             self.assertIn("suggested_fix", orphaned[0])
 
+    def test_orphaned_assets_ignores_known_temp_paths_by_default(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            targets = [
+                root / ".venv-aaa" / "lib" / "python3.13" / "site-packages" / "reports",
+                root / ".aaa-tmp" / "reports",
+                root / ".worktrees" / "v0.1" / "reports",
+                root / "aaa-evals" / "runner" / "tests" / "fixtures" / "reports",
+            ]
+            for target in targets:
+                target.mkdir(parents=True)
+                _write_index(target, [])
+                (target / "orphan.md").write_text("# Orphan", encoding="utf-8")
+
+            result = check_orphaned_assets(
+                {
+                    "repo_root": str(root),
+                    "target_paths": ["**/reports"],
+                    "file_pattern": "*.md",
+                    "require_index": True,
+                }
+            )
+            self.assertTrue(result["pass"])
+            self.assertEqual(result["details"], [])
+
+    def test_orphaned_assets_skips_excluded_target_dirs(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            base = root / ".worktrees" / "v0.1" / "reports"
+            base.mkdir(parents=True)
+
+            result = check_orphaned_assets(
+                {
+                    "repo_root": str(root),
+                    "target_paths": ["**/reports"],
+                    "file_pattern": "*.md",
+                    "require_index": True,
+                }
+            )
+            self.assertTrue(result["pass"])
+            self.assertEqual(result["details"], [])
+
 
 if __name__ == "__main__":
     unittest.main()

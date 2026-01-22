@@ -19,6 +19,19 @@ class TestRunRepoChecks(unittest.TestCase):
             self.assertTrue(passed)
             self.assertEqual(details, [])
 
+    def test_orphaned_assets_ignores_default_temp_paths(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            base = root / ".venv-aaa" / "lib" / "python3.13" / "site-packages" / "reports"
+            base.mkdir(parents=True)
+            payload = {"files": []}
+            (base / "index.json").write_text(json.dumps(payload), encoding="utf-8")
+            (base / "orphan.md").write_text("# Orphan", encoding="utf-8")
+
+            passed, details = run_repo_checks.check_orphaned_assets(str(root))
+            self.assertTrue(passed)
+            self.assertEqual(details, [])
+
 
 if __name__ == "__main__":
     unittest.main()

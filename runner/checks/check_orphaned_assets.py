@@ -5,7 +5,16 @@ import json
 from pathlib import Path
 from typing import Any, Iterable
 
-DEFAULT_EXCLUDES = ["**/README.md", "**/index.json", ".*", "**/.DS_Store"]
+DEFAULT_EXCLUDES = [
+    "**/README.md",
+    "**/index.json",
+    ".*",
+    "**/.DS_Store",
+    "**/.venv-aaa/**",
+    "**/.aaa-tmp/**",
+    "**/.worktrees/**",
+    "**/aaa-evals/runner/tests/fixtures/**",
+]
 DEFAULT_TARGETS = ["**/docs/adrs", "**/docs/milestones", "**/reports"]
 
 
@@ -65,6 +74,8 @@ def check_orphaned_assets(config: dict[str, Any]) -> dict[str, Any]:
     target_dirs = _iter_target_dirs(root, targets)
 
     for directory in target_dirs:
+        if _match_any(directory.as_posix(), excludes):
+            continue
         index_path = directory / "index.json"
         if require_index and not index_path.exists():
             details.append(
