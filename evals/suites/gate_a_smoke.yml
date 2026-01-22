@@ -1,0 +1,4 @@
+id: gate_a_smoke
+description: Gate A smoke checks for template tag alignment
+cases:
+  - gate-a-smoke

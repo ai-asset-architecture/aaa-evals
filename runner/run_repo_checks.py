@@ -6,13 +6,17 @@ import sys
 from pathlib import Path
 
 try:
-    from runner.checks.check_orphaned_assets import check_orphaned_assets as check_orphaned_assets_impl
     from runner.checks.check_agent_safety import check_agent_safety as check_agent_safety_impl
+    from runner.checks.check_gate_a_smoke import check_gate_a_smoke as check_gate_a_smoke_impl
+    from runner.checks.check_orphaned_assets import check_orphaned_assets as check_orphaned_assets_impl
+    from runner.checks.check_runbook_checksums import check_runbook_checksums as check_runbook_checksums_impl
 except ModuleNotFoundError:  # pragma: no cover - allow script execution
     repo_root = Path(__file__).resolve().parents[1]
     sys.path.insert(0, str(repo_root))
-    from runner.checks.check_orphaned_assets import check_orphaned_assets as check_orphaned_assets_impl
     from runner.checks.check_agent_safety import check_agent_safety as check_agent_safety_impl
+    from runner.checks.check_gate_a_smoke import check_gate_a_smoke as check_gate_a_smoke_impl
+    from runner.checks.check_orphaned_assets import check_orphaned_assets as check_orphaned_assets_impl
+    from runner.checks.check_runbook_checksums import check_runbook_checksums as check_runbook_checksums_impl
 
 try:
     from jsonschema import Draft202012Validator
@@ -351,6 +355,41 @@ def check_orphaned_assets(repo_path):
     return result["pass"], result["details"]
 
 
+def check_runbook_checksums(repo_path):
+    config = {"repo_root": repo_path, "pattern": "runbooks/**/*.yaml"}
+    result = check_runbook_checksums_impl(config)
+    return result["pass"], result["details"]
+
+
+def check_gate_a_smoke(repo_path):
+    repo_root = Path(repo_path)
+    cases_path = repo_root / "evals" / "cases" / "gate_a_smoke.jsonl"
+    if not cases_path.is_file():
+        nested = repo_root / "aaa-evals" / "evals" / "cases" / "gate_a_smoke.jsonl"
+        if nested.is_file():
+            cases_path = nested
+            repo_root = repo_root / "aaa-evals"
+        else:
+            return False, ["gate_a_smoke cases missing"]
+
+    failures = []
+    with cases_path.open("r", encoding="utf-8") as handle:
+        for idx, line in enumerate(handle, start=1):
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                case = json.loads(line)
+            except json.JSONDecodeError as exc:
+                failures.append(f"case {idx}: invalid JSON: {exc}")
+                continue
+            result = check_gate_a_smoke_impl(case, repo_root)
+            if not result.get("pass"):
+                failures.append({"case": case.get("id", f"line-{idx}"), "details": result.get("details")})
+
+    return len(failures) == 0, failures
+
+
 def check_agent_safety(repo_path):
     repo_root = Path(repo_path)
     cases_path = repo_root / "evals" / "cases" / "agent_safety.jsonl"
@@ -599,7 +638,9 @@ def main():
             "cli_contract_sync",
             "post_init_audit_required",
             "runbook_schema_validate",
+            "runbook_checksums",
             "orphaned_assets",
+            "gate_a_smoke",
             "agent_safety",
         ],
     )
@@ -635,8 +676,12 @@ def main():
         passed, details = check_post_init_audit_required(args.repo)
     elif args.check == "runbook_schema_validate":
         passed, details = check_runbook_schema_validate(args.repo)
+    elif args.check == "runbook_checksums":
+        passed, details = check_runbook_checksums(args.repo)
     elif args.check == "orphaned_assets":
         passed, details = check_orphaned_assets(args.repo)
+    elif args.check == "gate_a_smoke":
+        passed, details = check_gate_a_smoke(args.repo)
     elif args.check == "agent_safety":
         passed, details = check_agent_safety(args.repo)
     else:
