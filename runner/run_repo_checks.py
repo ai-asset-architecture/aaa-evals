@@ -13,6 +13,9 @@ try:
     from runner.checks.check_repo_type_consistency import (
         check_repo_type_consistency as check_repo_type_consistency_impl,
     )
+    from runner.checks.check_checks_manifest_alignment import (
+        check_checks_manifest_alignment as check_checks_manifest_alignment_impl,
+    )
 except ModuleNotFoundError:  # pragma: no cover - allow script execution
     repo_root = Path(__file__).resolve().parents[1]
     sys.path.insert(0, str(repo_root))
@@ -22,6 +25,9 @@ except ModuleNotFoundError:  # pragma: no cover - allow script execution
     from runner.checks.check_runbook_checksums import check_runbook_checksums as check_runbook_checksums_impl
     from runner.checks.check_repo_type_consistency import (
         check_repo_type_consistency as check_repo_type_consistency_impl,
+    )
+    from runner.checks.check_checks_manifest_alignment import (
+        check_checks_manifest_alignment as check_checks_manifest_alignment_impl,
     )
 
 try:
@@ -678,6 +684,7 @@ def main():
             "runbook_schema_validate",
             "runbook_checksums",
             "repo_type_consistency",
+            "checks_manifest_alignment",
             "orphaned_assets",
             "gate_a_smoke",
             "agent_safety",
@@ -685,6 +692,7 @@ def main():
     )
     parser.add_argument("--repo", required=True, help="Target repo path")
     parser.add_argument("--repo-type", default="")
+    parser.add_argument("--manifest-path", default="")
     parser.add_argument("--skills-root", default="skills")
     parser.add_argument("--schema-path", default="prompt.schema.json")
     parser.add_argument("--prompts-dir", default="prompts")
@@ -721,6 +729,10 @@ def main():
     elif args.check == "repo_type_consistency":
         config = {"repo_root": args.repo, "expected_repo_type": args.repo_type}
         payload = check_repo_type_consistency_impl(config)
+        passed, details = payload["pass"], payload["details"]
+    elif args.check == "checks_manifest_alignment":
+        config = {"manifest_path": args.manifest_path}
+        payload = check_checks_manifest_alignment_impl(config)
         passed, details = payload["pass"], payload["details"]
     elif args.check == "orphaned_assets":
         passed, details = check_orphaned_assets(args.repo)
