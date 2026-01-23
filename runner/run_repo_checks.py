@@ -504,7 +504,28 @@ def check_workflows(repo_path):
     return len(missing) == 0, missing
 
 
+def _load_repo_type(repo_path: str) -> str:
+    index_path = Path(repo_path) / "index.json"
+    if not index_path.is_file():
+        return ""
+    try:
+        payload = json.loads(index_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return ""
+    if not isinstance(payload, dict):
+        return ""
+    repo_type = str(payload.get("repo_type", "")).strip()
+    return repo_type
+
+
+def should_require_agent_assets(repo_type: str) -> bool:
+    return repo_type in {"agent", "genai-service"}
+
+
 def is_agent_repo(repo_path):
+    repo_type = _load_repo_type(repo_path)
+    if repo_type:
+        return should_require_agent_assets(repo_type)
     markers = ["agent.yaml", "agent.py"]
     return any(os.path.isfile(os.path.join(repo_path, marker)) for marker in markers)
 
