@@ -1,5 +1,6 @@
 import base64
 import json
+import os
 import subprocess
 from datetime import datetime
 from pathlib import Path
@@ -208,7 +209,13 @@ def main():
         report.append("")
 
     report_text = "\n".join(report)
-    out_dir = Path("/Users/imac/Documents/Code/AI-Lotto/AAA_WORKSPACE/aaa-tpl-docs/reports")
+    tpl_docs_dir = Path(
+        os.environ.get(
+            "AAA_TPL_DOCS_DIR",
+            "/Users/imac/Documents/Code/AI-Lotto/AAA_WORKSPACE/aaa-tpl-docs",
+        )
+    )
+    out_dir = tpl_docs_dir / "reports"
     out_dir.mkdir(parents=True, exist_ok=True)
     name = datetime.now().strftime("github_audit_report_%Y%m%d_%H%M.md")
     (out_dir / name).write_text(report_text, encoding="utf-8")
