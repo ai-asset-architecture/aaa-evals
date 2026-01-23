@@ -10,6 +10,9 @@ try:
     from runner.checks.check_gate_a_smoke import check_gate_a_smoke as check_gate_a_smoke_impl
     from runner.checks.check_orphaned_assets import check_orphaned_assets as check_orphaned_assets_impl
     from runner.checks.check_runbook_checksums import check_runbook_checksums as check_runbook_checksums_impl
+    from runner.checks.check_repo_type_consistency import (
+        check_repo_type_consistency as check_repo_type_consistency_impl,
+    )
 except ModuleNotFoundError:  # pragma: no cover - allow script execution
     repo_root = Path(__file__).resolve().parents[1]
     sys.path.insert(0, str(repo_root))
@@ -17,6 +20,9 @@ except ModuleNotFoundError:  # pragma: no cover - allow script execution
     from runner.checks.check_gate_a_smoke import check_gate_a_smoke as check_gate_a_smoke_impl
     from runner.checks.check_orphaned_assets import check_orphaned_assets as check_orphaned_assets_impl
     from runner.checks.check_runbook_checksums import check_runbook_checksums as check_runbook_checksums_impl
+    from runner.checks.check_repo_type_consistency import (
+        check_repo_type_consistency as check_repo_type_consistency_impl,
+    )
 
 try:
     from jsonschema import Draft202012Validator
@@ -671,12 +677,14 @@ def main():
             "post_init_audit_required",
             "runbook_schema_validate",
             "runbook_checksums",
+            "repo_type_consistency",
             "orphaned_assets",
             "gate_a_smoke",
             "agent_safety",
         ],
     )
     parser.add_argument("--repo", required=True, help="Target repo path")
+    parser.add_argument("--repo-type", default="")
     parser.add_argument("--skills-root", default="skills")
     parser.add_argument("--schema-path", default="prompt.schema.json")
     parser.add_argument("--prompts-dir", default="prompts")
@@ -710,6 +718,10 @@ def main():
         passed, details = check_runbook_schema_validate(args.repo)
     elif args.check == "runbook_checksums":
         passed, details = check_runbook_checksums(args.repo)
+    elif args.check == "repo_type_consistency":
+        config = {"repo_root": args.repo, "expected_repo_type": args.repo_type}
+        payload = check_repo_type_consistency_impl(config)
+        passed, details = payload["pass"], payload["details"]
     elif args.check == "orphaned_assets":
         passed, details = check_orphaned_assets(args.repo)
     elif args.check == "gate_a_smoke":
