@@ -10,6 +10,9 @@ try:
     from runner.checks.check_gate_a_smoke import check_gate_a_smoke as check_gate_a_smoke_impl
     from runner.checks.check_orphaned_assets import check_orphaned_assets as check_orphaned_assets_impl
     from runner.checks.check_runbook_checksums import check_runbook_checksums as check_runbook_checksums_impl
+    from runner.checks.check_release_integrity import (
+        check_release_integrity as check_release_integrity_impl,
+    )
     from runner.checks.check_repo_type_consistency import (
         check_repo_type_consistency as check_repo_type_consistency_impl,
     )
@@ -23,6 +26,9 @@ except ModuleNotFoundError:  # pragma: no cover - allow script execution
     from runner.checks.check_gate_a_smoke import check_gate_a_smoke as check_gate_a_smoke_impl
     from runner.checks.check_orphaned_assets import check_orphaned_assets as check_orphaned_assets_impl
     from runner.checks.check_runbook_checksums import check_runbook_checksums as check_runbook_checksums_impl
+    from runner.checks.check_release_integrity import (
+        check_release_integrity as check_release_integrity_impl,
+    )
     from runner.checks.check_repo_type_consistency import (
         check_repo_type_consistency as check_repo_type_consistency_impl,
     )
@@ -688,6 +694,7 @@ def main():
             "orphaned_assets",
             "gate_a_smoke",
             "agent_safety",
+            "release_integrity_check",
         ],
     )
     parser.add_argument("--repo", required=True, help="Target repo path")
@@ -698,6 +705,8 @@ def main():
     parser.add_argument("--prompts-dir", default="prompts")
     parser.add_argument("--sop-path", default="docs/new-project-sop.md")
     parser.add_argument("--profile-path", default="profile/README.md")
+    parser.add_argument("--release-tag", default="")
+    parser.add_argument("--release-verify-script", default="")
     args = parser.parse_args()
 
     if args.check == "readme":
@@ -740,6 +749,12 @@ def main():
         passed, details = check_gate_a_smoke(args.repo)
     elif args.check == "agent_safety":
         passed, details = check_agent_safety(args.repo)
+    elif args.check == "release_integrity_check":
+        passed, details = check_release_integrity_impl(
+            args.repo,
+            args.release_tag,
+            args.release_verify_script,
+        )
     else:
         if args.check == "skill_structure_v2":
             passed, details = check_skill_structure_v2(args.repo, args.skills_root)

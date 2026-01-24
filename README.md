@@ -39,6 +39,7 @@ New eval suites must include clear pass/fail criteria and a baseline. Dataset up
 - `runbook_schema_validate` - validates runbooks against runbook.schema.json / 驗證 runbook 符合 runbook.schema.json
 - `runbook_checksums` - validates runbook checksum integrity / 驗證 runbook checksum 一致性
 - `gate_a_smoke` - checks Gate A tag alignment for templates / 檢查 Gate A 模板 tag 對齊
+- `release_integrity_check` - verifies release tag/package integrity / 驗證 release tag 與打包一致性
 
 ## Asset Promotion Pipeline
 See `ASSET_PROMOTION.md` for the checklist and approval flow.
@@ -80,6 +81,7 @@ python runner/run_repo_checks.py --check post_init_audit_required --repo /path/t
 python runner/run_repo_checks.py --check runbook_schema_validate --repo /path/to/workspace
 python runner/run_repo_checks.py --check runbook_checksums --repo /path/to/workspace
 python runner/run_repo_checks.py --check gate_a_smoke --repo /path/to/workspace
+python runner/run_repo_checks.py --check release_integrity_check --repo /path/to/aaa-tools --release-tag vX.Y.Z
 python runner/run_gh_cli_setup.py --check gh_cli_setup
 python runner/run_github_audit.py
 ```
