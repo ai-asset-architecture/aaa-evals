@@ -1,0 +1,25 @@
+---
+name: nightly_dashboard_resilience
+description: Verify nightly governance dashboard has graceful degradation on threshold failure
+version: 1.0
+created: 2026-01-28
+priority: P2
+tags:
+  - nightly
+  - dashboard
+  - resilience
+  - graceful-degradation
+
+check:
+  id: nightly_dashboard_resilience
+  runner: runner/checks/check_nightly_dashboard_resilience.py
+  
+expected_behavior:
+  - Dashboard files generated before threshold checks
+  - Commit step has `if: ${{ always() }}` condition
+  - Workflow produces complete outputs even when gate fails
+
+derived_from:
+  task: P2-1
+  evidence: internal/development/audits/2026-01-28-p2-1-nightly-resilience-validation.md
+  validation_date: 2026-01-28
