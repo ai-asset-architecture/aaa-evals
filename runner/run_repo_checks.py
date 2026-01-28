@@ -19,6 +19,9 @@ try:
     from runner.checks.check_checks_manifest_alignment import (
         check_checks_manifest_alignment as check_checks_manifest_alignment_impl,
     )
+    from runner.checks.check_test_policy_compliance import (
+        check_test_policy_compliance as check_test_policy_compliance_impl,
+    )
 except ModuleNotFoundError:  # pragma: no cover - allow script execution
     repo_root = Path(__file__).resolve().parents[1]
     sys.path.insert(0, str(repo_root))
@@ -34,6 +37,9 @@ except ModuleNotFoundError:  # pragma: no cover - allow script execution
     )
     from runner.checks.check_checks_manifest_alignment import (
         check_checks_manifest_alignment as check_checks_manifest_alignment_impl,
+    )
+    from runner.checks.check_test_policy_compliance import (
+        check_test_policy_compliance as check_test_policy_compliance_impl,
     )
 
 try:
@@ -695,6 +701,7 @@ def main():
             "gate_a_smoke",
             "agent_safety",
             "release_integrity_check",
+            "test_policy_compliance",
         ],
     )
     parser.add_argument("--repo", required=True, help="Target repo path")
@@ -749,6 +756,8 @@ def main():
         passed, details = check_gate_a_smoke(args.repo)
     elif args.check == "agent_safety":
         passed, details = check_agent_safety(args.repo)
+    elif args.check == "test_policy_compliance":
+        passed, details = check_test_policy_compliance_impl(args.repo)
     elif args.check == "release_integrity_check":
         passed, details = check_release_integrity_impl(
             args.repo,
