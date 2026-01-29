@@ -5,4 +5,4 @@ on:
 
 jobs:
   eval:
-    uses: ai-asset-architecture/aaa-actions/.github/workflows/eval.yml@main
+    uses: ai-asset-architecture/aaa-actions/.github/workflows/eval.yml@v1
